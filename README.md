@@ -1,35 +1,76 @@
 # Respondon
 
-App Android nativa (Kotlin) que detecta automaticamente los screenshots que
-tomas, extrae el texto con OCR local y se lo manda a DeepSeek para mostrarte
-la respuesta en una burbuja flotante sobre cualquier app.
+App Android nativa que detecta automáticamente tus screenshots, extrae el texto con OCR local y responde la pregunta con DeepSeek en una burbuja flotante sobre cualquier app.
 
-## Como funciona
+![Kotlin](https://img.shields.io/badge/Kotlin-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white)
+![Android](https://img.shields.io/badge/Android-3DDC84?style=for-the-badge&logo=android&logoColor=white)
+![ML Kit](https://img.shields.io/badge/ML%20Kit-4285F4?style=for-the-badge&logo=google&logoColor=white)
+![DeepSeek](https://img.shields.io/badge/DeepSeek-FF6F00?style=for-the-badge&logoColor=white)
 
-1. Un `ContentObserver` escucha el `MediaStore` y detecta imagenes nuevas cuyo
-   nombre contiene "screenshot" o "captura" (creadas en los ultimos 15 segundos).
-2. ML Kit Text Recognition extrae el texto de la imagen, todo en el dispositivo
-   (offline, no se sube la imagen a ningun lado).
-3. El texto se envia a la API de DeepSeek (`deepseek-reasoner`) pidiendo que
-   responda la pregunta o resuma el contenido.
-4. La respuesta aparece en un panel flotante translucido (overlay) que se puede
-   arrastrar y cerrar.
+---
 
-## Componentes
+## Pipeline
 
-- `MainActivity`: pantalla de configuracion. Guarda la API key, gestiona los
-  permisos e inicia/detiene el servicio.
-- `BubbleService`: foreground service que dibuja la burbuja, observa el
-  MediaStore, corre el OCR y llama a DeepSeek.
-- `DeepSeekClient`: cliente HTTP minimo para la API de DeepSeek (bloqueante,
-  se usa desde un hilo de fondo).
+```
+  screenshot      +-----------------+    +-----------+    +------------------+    +----------+
+ del usuario ---->| ContentObserver |--->| OCR local |--->| DeepSeek         |--->| Burbuja  |
+                  | (MediaStore)    |    | (ML Kit)  |    | deepseek-reasoner|    | overlay  |
+                  +-----------------+    +-----------+    +------------------+    +----------+
+                         |                    |                   |                    |
+                  detecta imagenes       extrae el texto     responde la          panel flotante
+                  nuevas "screenshot"    en el dispositivo   pregunta o           translucido y
+                  o "captura" (<15s)     (offline)           resume               arrastrable
+```
 
-## Requisitos
+---
 
-- Android 8.0+ (minSdk 26, targetSdk 35).
-- JDK 17 y Android SDK con compileSdk 35 para compilar.
-- Una API key de DeepSeek (https://platform.deepseek.com). Se ingresa en la app
-  y se guarda en `SharedPreferences`; nunca va en el codigo ni en el repo.
+## ¿Cómo funciona?
+
+1. Un `ContentObserver` escucha el **MediaStore** y detecta imágenes nuevas (últimos 15 segundos) cuyo nombre contiene "screenshot" o "captura"
+2. **ML Kit Text Recognition** extrae el texto de la imagen, 100% en el dispositivo — la imagen nunca sale del teléfono
+3. El texto se envía a **DeepSeek** (`deepseek-reasoner`) pidiendo que responda la pregunta o resuma el contenido
+4. La respuesta aparece en una **burbuja flotante translúcida** (overlay) visible sobre cualquier app
+
+---
+
+## Funcionalidades
+
+- **Detección automática de screenshots** — sin abrir la app, solo toma la captura
+- **OCR offline** — ML Kit procesa la imagen localmente, sin subirla a ningún servidor
+- **Respuesta con razonamiento** — usa `deepseek-reasoner` para preguntas complejas
+- **Burbuja overlay** — panel flotante arrastrable que funciona sobre cualquier app
+- **API key segura** — se guarda en `SharedPreferences`, nunca en el código ni en el repo
+- **Detección de permiso parcial** — si Android 14 da acceso parcial a fotos, la app lo detecta y redirige a Ajustes
+
+---
+
+## Stack
+
+| Capa | Tecnología |
+|------|-----------|
+| Lenguaje | Kotlin (JVM 17) |
+| Plataforma | Android nativo (minSdk 26, targetSdk 35) |
+| OCR | ML Kit Text Recognition (on-device) |
+| IA | DeepSeek API (`deepseek-reasoner`) |
+| Overlay | `WindowManager` + `TYPE_APPLICATION_OVERLAY` |
+| Detección | `ContentObserver` sobre `MediaStore.Images` |
+| Persistencia | `SharedPreferences` |
+
+---
+
+## Estructura
+
+```
+Respondon/
+├── app/src/main/java/com/mickaell/respondon/
+│   ├── MainActivity.kt      # configuracion: API key, permisos, iniciar/detener servicio
+│   ├── BubbleService.kt     # foreground service: burbuja, observer, OCR y llamada a DeepSeek
+│   └── DeepSeekClient.kt    # cliente HTTP minimo para la API de DeepSeek
+├── app/src/main/res/        # layouts del panel flotante y la pantalla principal
+└── app/src/test/            # tests unitarios (parseo de respuesta DeepSeek)
+```
+
+---
 
 ## Compilar e instalar
 
@@ -39,18 +80,28 @@ adb push app/build/outputs/apk/debug/app-debug.apk /data/local/tmp/r.apk
 adb shell pm install -r /data/local/tmp/r.apk
 ```
 
-Nota: en algunos dispositivos (ej. TECNO POVA 5) `adb install` por streaming
-falla con `INSTALL_PARSE_FAILED_NOT_APK`; por eso se instala con push + `pm install`.
+Requiere JDK 17 y Android SDK con compileSdk 35.
 
-## Permisos
+> **Nota:** en algunos dispositivos (ej. TECNO POVA 5) `adb install` por streaming falla con `INSTALL_PARSE_FAILED_NOT_APK`; por eso se instala con push + `pm install`.
 
-- **Mostrar sobre otras apps** (overlay): para la burbuja flotante.
-- **Fotos y videos** (`READ_MEDIA_IMAGES`): para detectar los screenshots.
+---
 
-Importante (Android 14+): el acceso parcial a fotos ("Seleccionar fotos") NO
-sirve, porque el MediaStore solo devuelve las fotos elegidas a mano y los
-screenshots nuevos nunca llegan. Hay que dar "Permitir todo". La app detecta el
-acceso parcial y redirige a Ajustes.
+## Configuración
+
+1. Consigue una API key en [platform.deepseek.com](https://platform.deepseek.com)
+2. Abre la app, pega la key y guárdala (queda en `SharedPreferences`)
+3. Concede los permisos y toca **Iniciar**
+
+### Permisos
+
+| Permiso | Para qué |
+|---------|----------|
+| Mostrar sobre otras apps | Dibujar la burbuja flotante |
+| Fotos y videos (`READ_MEDIA_IMAGES`) | Detectar los screenshots nuevos |
+
+> **Importante (Android 14+):** el acceso parcial a fotos ("Seleccionar fotos") **no sirve** — el MediaStore solo devuelve las fotos elegidas a mano y los screenshots nuevos nunca llegan. Hay que dar **"Permitir todo"**. La app detecta el acceso parcial y redirige a Ajustes.
+
+---
 
 ## Tests
 
