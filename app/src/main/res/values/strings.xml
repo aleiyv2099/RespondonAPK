@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Respondón</string>
+    <string name="intro">1. Pega tu API key de DeepSeek y guárdala.\n2. Concede el permiso de burbuja y el de fotos (elige \"Permitir todo\").\n3. Inicia el servicio: aparecerá una burbuja azul.\n\nCada vez que tomes una captura de pantalla, la app extrae el texto con OCR, se lo envía a DeepSeek y muestra la respuesta en la burbuja.</string>
+    <string name="api_key_hint">API key de DeepSeek (sk-...)</string>
+    <string name="save_key">Guardar API key</string>
+    <string name="grant_overlay">Permiso de burbuja (superposición)</string>
+    <string name="grant_perms">Permisos de fotos y notificaciones</string>
+    <string name="start_service">Iniciar burbuja</string>
+    <string name="stop_service">Detener burbuja</string>
+    <string name="status_fmt">Superposición: %1$s | Fotos: %2$s</string>
+    <string name="key_saved">API key guardada</string>
+    <string name="perms_ok">Permisos ya concedidos</string>
+    <string name="need_overlay">Falta el permiso de superposición</string>
+    <string name="need_full_access">Necesitas dar acceso a TODAS las fotos. En Permisos elige Fotos y videos y marca \"Permitir todo\".</string>
+    <string name="started">Burbuja iniciada</string>
+    <string name="panel_hint">Toma una captura de pantalla y la respuesta aparecerá aquí.</string>
+    <string name="copied">Copiado</string>
+    <string name="copy">Copiar</string>
+    <string name="hide">Ocultar</string>
+    <string name="exit">Salir</string>
+    <string name="no_api_key">Falta la API key: ábrela en la app y guárdala primero.</string>
+    <string name="read_error">No se pudo leer la captura.</string>
+    <string name="no_text">La captura no contiene texto legible.</string>
+    <string name="ocr_error">Error de OCR: %1$s</string>
+    <string name="api_error">Error al consultar DeepSeek: %1$s</string>
+</resources>
